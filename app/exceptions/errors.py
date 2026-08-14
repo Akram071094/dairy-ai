@@ -18,6 +18,20 @@ class DairyAIError(Exception):
         super().__init__(self.message)
 
 
+class UnauthorizedError(DairyAIError):
+    """Raised when a request is not authenticated."""
+
+    status_code = status.HTTP_401_UNAUTHORIZED
+    message = "Not authenticated."
+
+
+class ForbiddenError(DairyAIError):
+    """Raised when an authenticated user lacks access to a resource."""
+
+    status_code = status.HTTP_403_FORBIDDEN
+    message = "Forbidden."
+
+
 class NotFoundError(DairyAIError):
     """Raised when a requested resource does not exist."""
 

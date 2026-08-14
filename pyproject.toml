@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dairy-ai"
-version = "0.1.0"
-description = "Dairy AI Recommendation Engine - consumes operational data from PostgreSQL and generates AI-powered recommendations."
+version = "0.2.0"
+description = "Dairy AI platform - governed agentic platform for Dairy OS (HLD-110): agent registry, orchestrator, tool execution, governance and audit."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
@@ -20,6 +20,7 @@ dependencies = [
     "psycopg2-binary>=2.9.9",
     "sqlalchemy>=2.0.25",
     "pandas>=2.2.0",
+    "httpx>=0.27.0",
 ]
 
 [project.optional-dependencies]

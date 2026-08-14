@@ -9,7 +9,9 @@ import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 
+from app.api.deps import get_forwarded_user
 from app.main import app
+from app.services.forwarded_auth import ForwardedUser
 
 ORG_ID = uuid.UUID("11111111-1111-1111-1111-111111111111")
 
@@ -19,6 +21,32 @@ def client() -> Generator[TestClient, None, None]:
     """Yield a FastAPI TestClient wrapping the application."""
     with TestClient(app) as test_client:
         yield test_client
+
+
+@pytest.fixture
+def forwarded_user() -> ForwardedUser:
+    """Return a default forwarded user belonging to the test organization."""
+    return ForwardedUser(
+        user_id="11111111-1111-1111-1111-111111111111",
+        email="owner@org.com",
+        organization_id=str(ORG_ID),
+        permissions={
+            "inventory:read",
+            "delivery:read",
+            "collection:read",
+            "user:manage",
+        },
+    )
+
+
+@pytest.fixture
+def auth_client(
+    client: TestClient, forwarded_user: ForwardedUser
+) -> Generator[TestClient, None, None]:
+    """Yield a TestClient whose agent endpoints accept the forwarded user."""
+    app.dependency_overrides[get_forwarded_user] = lambda: forwarded_user
+    yield client
+    app.dependency_overrides.pop(get_forwarded_user, None)
 
 
 @pytest.fixture
