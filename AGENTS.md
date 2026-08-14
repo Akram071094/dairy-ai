@@ -23,15 +23,17 @@ This document provides guidelines for AI coding assistants working on the Dairy 
 ```markdown
 ✅ DO: Consume existing tables (inventory, stock_movements, outstandings, retailers, ...)
 ✅ DO: Read columns defined by dairy-backend models
-❌ DON'T: Create new tables
+✅ DO: Create/manage dairy-ai-owned tables only: ai_recommendations
 ❌ DON'T: Modify column types
 ❌ DON'T: Add new columns
+❌ DON'T: Create tables outside the dairy-ai-owned list above
 ```
 
 ### 2. Read-Only Data Access
 
 ```markdown
 ✅ DO: Run SELECT queries against the shared PostgreSQL DB
+✅ DO: Write only to the dairy-ai-owned ai_recommendations table (via the async job)
 ❌ DON'T: INSERT/UPDATE/DELETE operational data
 ```
 
@@ -62,7 +64,7 @@ This document provides guidelines for AI coding assistants working on the Dairy 
 
 ## File Naming Conventions
 
-- Routes: `app/api/endpoints/*.py` (e.g., recommendations.py, health.py)
+- Routes: `app/api/<feature>/*.py` (e.g., recommendations.py, health.py; registered via `app/api/<feature>/__init__.py`)
 - Services: `app/services/*_service.py`
 - Schemas: `app/models/schemas.py`
 - ML engine: `ml/engine/*.py`

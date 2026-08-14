@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 
 import pandas as pd
 
+from app.models.recommendation import AIRecommendation
 from app.models.schemas import (
     RecommendationDomain,
     RecommendationItem,
@@ -54,6 +55,45 @@ class RecommendationService:
             organization_id=organization_id,
             domain=domain,
             generated_at=datetime.now(timezone.utc),
+            recommendations=items,
+        )
+
+    def get_stored(
+        self,
+        organization_id: uuid.UUID,
+        domain: RecommendationDomain,
+        top_n: int = 100,
+    ) -> RecommendationResponse:
+        """Return the latest precomputed recommendations stored by the job."""
+        from sqlalchemy import select
+
+        rows = (
+            self.data_service.db.execute(
+                select(AIRecommendation)
+                .where(
+                    AIRecommendation.organization_id == organization_id,
+                    AIRecommendation.domain == domain.value,
+                )
+                .order_by(AIRecommendation.created_at.desc())
+                .limit(top_n)
+            )
+            .scalars()
+            .all()
+        )
+
+        items = [
+            RecommendationItem(
+                item_id=row.item_id,
+                label=row.label or row.item_id,
+                score=float(row.score),
+                reason=row.reason or "",
+            )
+            for row in rows
+        ]
+        return RecommendationResponse(
+            organization_id=organization_id,
+            domain=domain,
+            generated_at=rows[0].created_at if rows else datetime.now(timezone.utc),
             recommendations=items,
         )
 

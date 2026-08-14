@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -33,6 +34,24 @@ def list_domains() -> list[RecommendationDomainInfo]:
         RecommendationDomainInfo(domain=domain, description=description)
         for domain, description in _DOMAIN_DESCRIPTIONS.items()
     ]
+
+
+DomainQuery = Annotated[
+    RecommendationDomain,
+    Query(description="Which precomputed domain to return."),
+]
+
+
+@router.get("/stored/{organization_id}", response_model=RecommendationResponse)
+def get_stored_recommendations(
+    organization_id: uuid.UUID,
+    db: DBSession,
+    domain: DomainQuery = RecommendationDomain.STOCK,
+) -> RecommendationResponse:
+    """Return the latest precomputed recommendations stored by the async job."""
+    service = RecommendationService(db)
+    result = service.get_stored(organization_id, domain)
+    return result
 
 
 @router.post("", response_model=RecommendationResponse)

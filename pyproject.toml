@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dairy-ai"
-version = "0.1.0"
-description = "Dairy AI Recommendation Engine - consumes operational data from PostgreSQL and generates AI-powered recommendations."
+version = "0.2.0"
+description = "Dairy AI platform - deterministic recommendation engine (stock & collections) consuming shared PostgreSQL operational data."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
