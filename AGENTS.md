@@ -2,39 +2,54 @@
 
 ## Overview
 
-This document provides guidelines for AI coding assistants working on the Dairy AI Recommendation Engine (dairy-ai) repository.
+This document provides guidelines for AI coding assistants working on the Dairy AI service repository (dairy-ai).
+
+dairy-ai is the **governed agentic platform** for Dairy OS (see `klyra` HLD-110). It provides agentic workflows, sub-agents, tool execution, governance policies, approval workflows, and audit trails, integrating cleanly with dairy-backend. It also hosts the deterministic recommendation engine.
 
 ## This Repository Handles
 
-- AI-powered recommendation generation (deterministic engine today, Ollama later)
+- **Agentic platform**: agent registry, orchestrator, tool registry/executor, deterministic rule-based agents (Ollama/LLM in a later phase)
+- **Governance**: policies, approvals (human-in-the-loop), audit trail
+- **Recommendation generation** (deterministic engine today, Ollama later)
 - Consuming operational data from the **shared PostgreSQL database** (owned by dairy-platform/dairy-backend schema)
-- Exposing recommendation capabilities as a FastAPI service deployed separately from dairy-backend
+- Exposing capabilities as a FastAPI service deployed separately from dairy-backend
 
 ## This Repository Does NOT Handle
 
 - Business CRUD APIs (those live in dairy-backend)
-- Database schema design, migrations, or RLS (owned by dairy-platform)
-- Authentication/authorization (dairy-backend owns that; dairy-ai reads shared tables)
+- Database schema design, migrations, or RLS of operational tables (owned by dairy-platform)
+- Authentication/authorization of end users (dairy-backend owns that; dairy-ai validates forwarded JWTs and reads shared tables)
+- Business actions — agents **execute** via dairy-backend REST APIs (double-authorization; backend remains the final authority)
 
 ## Critical Rules
 
-### 1. Never Change Database Schema
+### 1. Never Change Operational Schema
 
 ```markdown
 ✅ DO: Consume existing tables (inventory, stock_movements, outstandings, retailers, ...)
 ✅ DO: Read columns defined by dairy-backend models
-✅ DO: Create/manage dairy-ai-owned tables only: ai_recommendations
+✅ DO: Create/manage dairy-ai-owned tables only:
+      ai_recommendations, agent_definitions, agent_executions, approval_requests, audit_events
 ❌ DON'T: Modify column types
-❌ DON'T: Add new columns
+❌ DON'T: Add new columns to existing operational tables
 ❌ DON'T: Create tables outside the dairy-ai-owned list above
 ```
 
-### 2. Read-Only Data Access
+### 2. Read-Only Data Access on Operational Data
 
 ```markdown
-✅ DO: Run SELECT queries against the shared PostgreSQL DB
-✅ DO: Write only to the dairy-ai-owned ai_recommendations table (via the async job)
-❌ DON'T: INSERT/UPDATE/DELETE operational data
+✅ DO: Run SELECT queries against the shared PostgreSQL DB (operational tables)
+✅ DO: Write only to dairy-ai-owned tables (agent executions, approvals, audit, recommendations)
+❌ DON'T: INSERT/UPDATE/DELETE operational data directly — route actions through dairy-backend APIs
+```
+
+### 2b. Double Authorization
+
+```markdown
+✅ DO: Validate forwarded JWTs and check agent/tool capability requirements
+✅ DO: Call dairy-backend via its REST APIs for every business action
+✅ DO: Rely on dairy-backend's own permission checks as the final authority
+❌ DON'T: Bypass dairy-backend authorization or access the DB for business actions
 ```
 
 ### 3. Keep the API Contract Stable
@@ -64,9 +79,11 @@ This document provides guidelines for AI coding assistants working on the Dairy 
 
 ## File Naming Conventions
 
-- Routes: `app/api/<feature>/*.py` (e.g., recommendations.py, health.py; registered via `app/api/<feature>/__init__.py`)
+- Routes: `app/api/<feature>/*.py` (e.g., recommendations.py, health.py, agent.py; registered via `app/api/<feature>/__init__.py`)
 - Services: `app/services/*_service.py`
 - Schemas: `app/models/schemas.py`
+- Agents: `app/agents/*_agent.py` (base.py, registry.py)
+- Tools: `app/tools/*.py` (registry.py, executor.py)
 - ML engine: `ml/engine/*.py`
 - Feature builders: `ml/features/*.py`
 
@@ -83,6 +100,7 @@ from sqlalchemy.orm import Session
 
 # 3. Local application
 from app.models.schemas import RecommendationResponse
+from app.agents.registry import agent_registry
 from ml.engine.decision_engine import DecisionEngine
 ```
 

@@ -1,4 +1,4 @@
-"""Dairy AI Recommendation Engine - core application package."""
+"""Dairy AI Recommendation Engine and agent platform - core application package."""
 
 from __future__ import annotations
 
