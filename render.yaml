@@ -3,6 +3,7 @@ services:
     name: dairy-ai
     runtime: docker
     dockerfilePath: docker/Dockerfile
+    startCommand: bash scripts/startup.sh
     healthCheckPath: /api/v1/health
     plan: free
     envVars:
