@@ -13,8 +13,8 @@ import logging
 
 from sqlalchemy import text
 
-from app.database import Base, SessionLocal, engine
 import app.models  # noqa: F401 — register ORM models with Base.metadata
+from app.database import Base, SessionLocal, engine
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("scripts.db_check")
