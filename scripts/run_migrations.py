@@ -13,14 +13,17 @@ import logging
 
 from sqlalchemy import text
 
-from app.database import SessionLocal
+from app.database import Base, SessionLocal, engine
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("scripts.db_check")
 
 
-def check_database() -> None:
-    """Open a session and run a trivial query to verify connectivity."""
+def run_migrations() -> None:
+    """Create dairy-ai-owned tables and verify connectivity."""
+    Base.metadata.create_all(bind=engine)
+    logger.info("Dairy-ai tables ensured.")
+
     db = SessionLocal()
     try:
         db.execute(text("SELECT 1"))
@@ -30,4 +33,4 @@ def check_database() -> None:
 
 
 if __name__ == "__main__":
-    check_database()
+    run_migrations()
